@@ -1,25 +1,29 @@
 <template>
     <div class="Landing">
         <div id="map" ref="map"></div>
-        <div id="table" v-if="selected === true">
+        <div class = "table">
+            <table id="table" v-if="selected === true">
             <tr>
+                <td>State</td>
+                <td>County ID</td>
                 <td>County Name</td>
                 <td>Population</td>
                 <td>Average Age</td>
                 <td>Gender Ratio</td>
             </tr>
             <tr>
+                <td>{{ selectedState }}</td>
+                <td>{{ selectedID }}</td>
                 <td>{{ selectedName }}</td>
                 <td>{{ selectedPopulation }}</td>
                 <td>{{ selectedAge }}</td>
                 <td>{{ selectedGender }}</td>
             </tr>
+            </table>
         </div>
     </div>
 </template>
 <script>
-    import gmapsInit from '@/utils/gmap';
-
     export default {
         name: "Landing",
         data() {
@@ -30,6 +34,8 @@
                 filterclicked: false,
                 countyclicked: false,
                 selected:false,
+                selectedState:'',
+                selectedID:'',
                 selectedName: '',
                 selectedPopulation: '',
                 selectedAge:'',
@@ -44,10 +50,13 @@
             this.countycoords = require('@/assets/countyzones.json');
 
             this.map.data.addGeoJson(this.countycoords);
-            this.map.data.addListener("onclick", (event)=>{
+            this.map.data.addListener("click", (event)=>{
                 //TODO backend call to get county-specific data
+                console.log("Click Event",event.feature.j,event.feature.j.NAME);
                 this.selected = !this.selected;
-                this.selectedName = event.feature.getProperty("name");
+                this.selectedState = event.feature.j.STATE;
+                this.selectedID = event.feature.j.COUNTY;
+                this.selectedName = event.feature.j.NAME;
                 this.selectedPopulation = "Testing Population";
                 this.selectedAge = "Testing Age";
                 this.selectedGender = "Testing Gender";
