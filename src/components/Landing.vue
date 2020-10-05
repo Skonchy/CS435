@@ -67,14 +67,19 @@
                 this.selectedPopulation = "Testing Population";
                 this.selectedAge = "Testing Age";
                 this.selectedGender = "Testing Gender";
+
+                this.map.data.revertStyle();
+                if(this.selected === true) {
+                    this.map.data.overrideStyle(event.feature, { strokeWeight: 8, strokeColor: "blue" });
+                }
             });
-            this.map.data.addListener("mouseover", (event) => {
+            /*this.map.data.addListener("mouseover", (event) => {
                 this.map.data.revertStyle();
                 this.map.data.overrideStyle(event.feature, { strokeWeight: 8 });
             });
             this.map.data.addListener("mouseout", (event) => {
                 this.map.data.revertStyle();
-            });
+            });*/
         },
         methods: {
             gidToName(gid){
