@@ -1,6 +1,18 @@
 <template>
     <div class="Landing">
-        <div id="map" ref="map"></div>
+        <div class="container">
+
+            <div id="filter">
+                <h4>Filter</h4>
+                <input type="radio" value="age" v-model="filter"> <label>Age</label>
+                <input type="radio" value="sex" v-model="filter"> <label>Sex</label>
+                <input type="radio" value="pop" v-model="filter"> <label>Population</label>
+                <input type="radio" value="race" v-model="filter"> <label>Race</label>
+
+            </div>
+            <div id="map" ref="map"></div>
+            
+        </div>
         <div class = "table" v-if="selected === true">
             <table class="table">
             <tr>
@@ -30,9 +42,10 @@
             return {
                 map: null,
                 countycoords: null,
-                filter_array: [],
-                filterclicked: false,
+                filter: "pop",
                 countyclicked: false,
+                censusMin: 0,
+                censusMax: 0,
                 selected:false,
                 selectedState:'',
                 selectedID:'',
@@ -40,6 +53,7 @@
                 selectedPopulation: '',
                 selectedAge:'',
                 selectedGender:'',
+                demoData:'',
             }
         },
         mounted() {
@@ -48,9 +62,13 @@
                 center:{lat:38.678,lng:-90.199},
                 zoom:7
             });
-            //import xounty coord data and apply it to the map above
+            //import county coord data and apply it to the map above
             this.countycoords = require('@/assets/countyzones.json');
             this.map.data.addGeoJson(this.countycoords);
+
+            this.map.data.forEach((feature)=>{
+                this.map.data.overrideStyle(feature, { strokeWeight: 1, fillOpacity: 0.1});
+            });
 
             //geoJSON map area events
             this.map.data.addListener("click", (event)=>{
@@ -59,7 +77,7 @@
                 //debug prints
                 console.log("Click Event",event.feature.j.STATE,this.gidToName(event.feature.j.STATE));
                 //if the same county is selected, hide data
-                this.selected = ((this.selectedName === event.feature.j.NAME) ? this.selected = false : this.selected = true);
+                this.selected = ((this.selectedID === event.feature.j.COUNTY) ? this.selected = false : this.selected = true);
                 //convert 2 digit code to state name using census data and assign rest of data for table
                 this.selectedState = this.gidToName(event.feature.j.STATE);
                 this.selectedID = event.feature.j.COUNTY;
@@ -70,7 +88,7 @@
 
                 this.map.data.revertStyle();
                 if(this.selected === true) {
-                    this.map.data.overrideStyle(event.feature, { strokeWeight: 8, strokeColor: "blue" });
+                    this.map.data.overrideStyle(event.feature, { strokeWeight: 6, strokeColor: "blue" });
                 }
             });
             /*this.map.data.addListener("mouseover", (event) => {
@@ -188,6 +206,42 @@
                         return 'Wyoming';
                 }
             },
+
+            getDemoData(filter){
+                this.censusMin = 0;
+                this.censusMax = 0;
+                axios.get("http://localhost:8000/"+filter).then(response => (this.demoData = response.data.demoData));
+                this.demoData.forEach((row)=>{
+                    const censusVar = parseFloat(row[0]);
+                    const countyID = row[1];
+
+                    if (censusVar < censusMin) {
+                        this.censusMin = censusVar;
+                    }
+                    if (censusVar > censusMax) {
+                        this.censusMax = censusVar;
+                    }
+
+                    map.data.getFeatureById(countyID).setProperty("CENSUSVAR", censusVar);
+                    this.styleFeature(map.data.getFeatureById(countyID));
+                });
+            },
+
+            styleFeature(feature){
+                const low = [5, 69, 54]; // color of smallest
+                const high = [151, 83, 34]; // color of largest
+                // delta represents where the value sits between the min and max
+                const delta = (feature.getProperty("CENSUSVAR") - censusMin) / (censusMax - censusMin);
+                const color = [];
+
+                for (let i = 0; i < 3; i++) {
+                    color.push((high[i] - low[i]) * delta + low[i]);
+                }
+
+                if(feature.getProperty("CENSUSVAR") !== NULL){
+                    this.map.data.overrideStyle(feature, {fillColor: rgb(color[0],color[1],color[2])});
+                }
+            }
         },
     }
 </script>
@@ -203,6 +257,7 @@ body {
     background:grey;
     outline: 2px solid grey;
 }
+
 
 div.table {
     margin: 10px auto 20px auto;
