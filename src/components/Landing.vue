@@ -3,12 +3,13 @@
         <div class="container">
 
             <div id="filter">
-                <h4>Filter</h4>
-                <input type="radio" value="age" v-model="filter"> <label>Age</label>
-                <input type="radio" value="sex" v-model="filter"> <label>Sex</label>
-                <input type="radio" value="pop" v-model="filter"> <label>Population</label>
-                <input type="radio" value="race" v-model="filter"> <label>Race</label>
-
+                <h4>Filter     <button class="icon" id="search" @click="filtered = !filtered"><i class="fa fa-search"></i></button></h4>
+                <div id="options" v-if="filtered">
+                    <input type="radio" value="age" v-model="filter"> <label>Age</label>
+                    <input type="radio" value="sex" v-model="filter"> <label>Sex</label>
+                    <input type="radio" value="pop" v-model="filter"> <label>Population</label>
+                    <input type="radio" value="race" v-model="filter"> <label>Race</label>
+                </div>
             </div>
             <div id="map" ref="map"></div>
             
@@ -33,7 +34,7 @@
                 <td>{{ selectedAge }}</td>
                 <td>{{ selectedGender }}</td>
                 <td>{{ selectedRace }}</td>
-                <td></td>
+                <td><button type="submit" @click="saveFileAll()">Export All</button></td>
             </tr>
             </table>
         </div>
@@ -47,6 +48,7 @@
                 map: null,
                 countycoords: null,
                 filter: "pop",
+                filtered: false,
                 countyclicked: false,
                 censusMin: 0,
                 censusMax: 0,
@@ -260,7 +262,20 @@
                     selectedAge: this.selectedAge,
                     selectedGender: this.selectedGender}
                 const data = JSON.stringify(dataJSON)
-                const blob = new Blob([data], {type: 'text/plain'})
+                const blob = new Blob([data], {type: 'text/plain'});
+                const e = document.createEvent('MouseEvents'),
+                a = document.createElement('a');
+                a.download = "export.json";
+                a.href = window.URL.createObjectURL(blob);
+                a.dataset.downloadurl = ['text/json', a.download, a.href].join(':');
+                e.initEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+                a.dispatchEvent(e);
+            },
+
+            saveFileAll(){
+                console.log("Attempting to save File")
+                const data = JSON.stringify(this.demoData);
+                const blob = new Blob([data], {type: 'text/plain'});
                 const e = document.createEvent('MouseEvents'),
                 a = document.createElement('a');
                 a.download = "export.json";
@@ -291,6 +306,17 @@ div.table {
     outline: 2px solid grey;
     display: flex;
     justify-content: center;
+}
+
+#search {
+  width: 5%;
+  padding: 10px;
+  background: #2196f3;
+  color: white;
+  font-size: 17px;
+  border: 1px solid grey;
+  border-left: none; /* Prevent double borders */
+  cursor: pointer;
 }
 
 table.table {
