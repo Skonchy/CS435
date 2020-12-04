@@ -22,6 +22,8 @@
                 <td>Population</td>
                 <td>Average Age</td>
                 <td>Gender Ratio</td>
+                <td>Race Ratio</td>
+                <td><button type="submit" @click="saveFile()">Export Data</button></td>
             </tr>
             <tr>
                 <td>{{ selectedState }}</td>
@@ -30,6 +32,8 @@
                 <td>{{ selectedPopulation }}</td>
                 <td>{{ selectedAge }}</td>
                 <td>{{ selectedGender }}</td>
+                <td>{{ selectedRace }}</td>
+                <td></td>
             </tr>
             </table>
         </div>
@@ -53,6 +57,7 @@
                 selectedPopulation: '',
                 selectedAge:'',
                 selectedGender:'',
+                selectedRace:'',
                 demoData:'',
             }
         },
@@ -85,6 +90,7 @@
                 this.selectedPopulation = "Testing Population";
                 this.selectedAge = "Testing Age";
                 this.selectedGender = "Testing Gender";
+                this.selectedRace = "Testing Race";
 
                 this.map.data.revertStyle();
                 if(this.selected === true) {
@@ -210,10 +216,11 @@
             getDemoData(filter){
                 this.censusMin = 0;
                 this.censusMax = 0;
-                axios.get("http://localhost:8000/"+filter).then(response => (this.demoData = response.data.demoData));
+                axios.get("http://localhost:5000/"+filter).then(response => (this.demoData = response.data.demoData));
                 this.demoData.forEach((row)=>{
-                    const censusVar = parseFloat(row[0]);
+                    const censusVar = parseFloat(row[2]);
                     const countyID = row[1];
+                    const stateID = row[0]
 
                     if (censusVar < censusMin) {
                         this.censusMin = censusVar;
@@ -241,6 +248,26 @@
                 if(feature.getProperty("CENSUSVAR") !== NULL){
                     this.map.data.overrideStyle(feature, {fillColor: rgb(color[0],color[1],color[2])});
                 }
+            },
+
+            saveFile(){
+                console.log("Attempting to save File")
+                const dataJSON = {
+                    selectedState: this.selectedState,
+                    selectedID: this.selectedID,
+                    selectedName: this.selectedName,
+                    selectedPopulation: this.selectedPopulation,
+                    selectedAge: this.selectedAge,
+                    selectedGender: this.selectedGender}
+                const data = JSON.stringify(dataJSON)
+                const blob = new Blob([data], {type: 'text/plain'})
+                const e = document.createEvent('MouseEvents'),
+                a = document.createElement('a');
+                a.download = "export.json";
+                a.href = window.URL.createObjectURL(blob);
+                a.dataset.downloadurl = ['text/json', a.download, a.href].join(':');
+                e.initEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+                a.dispatchEvent(e);
             }
         },
     }
@@ -257,7 +284,6 @@ body {
     background:grey;
     outline: 2px solid grey;
 }
-
 
 div.table {
     margin: 10px auto 20px auto;
