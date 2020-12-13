@@ -224,7 +224,7 @@
             getDemoData(filter){
                 this.censusMin = 0;
                 this.censusMax = 0;
-                axios.get("http://localhost:5000/").then(response => (this.demoData = response.data.demoData)).catch("Error in Country Data Get Request");
+                axios.get("http://localhost:5000/").then(response => (this.demoData = response.data.data_requested)).catch("Error in Country Data Get Request");
                 this.demoData.forEach((row)=>{
                     const censusVar = parseFloat(row[2]);
                     const countyID = row[1];
@@ -243,6 +243,7 @@
             },
 
             getCountyData(stateID, countyID){
+                console.log(countyID);
                 axios.get("http://localhost:5000/"+stateID+"/"+countyID).then(response => (this.countyData = response.data.countyData)).catch("Error in County Data Get Request");
             },
 
