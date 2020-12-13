@@ -61,6 +61,7 @@
                 selectedGender:'',
                 selectedRace:'',
                 demoData:'',
+                countyData:'',
             }
         },
         mounted() {
@@ -71,7 +72,9 @@
             });
             //import county coord data and apply it to the map above
             this.countycoords = require('@/assets/countyzones.json');
-            this.map.data.addGeoJson(this.countycoords);
+            this.map.data.addGeoJson(this.countycoords, {
+                idPropertyName: "GEO_ID"
+            });
 
             this.map.data.forEach((feature)=>{
                 this.map.data.overrideStyle(feature, { strokeWeight: 1, fillOpacity: 0.1});
@@ -80,19 +83,19 @@
             //geoJSON map area events
             this.map.data.addListener("click", (event)=>{
                 //TODO backend call to get county-specific data
-
+                this.getCountyData(event.feature.j.STATE,event.feature.j.COUNTY);
                 //debug prints
-                console.log("Click Event",event.feature.j.STATE,this.gidToName(event.feature.j.STATE));
+                console.log("Click Event",event.feature.j.STATE,this.gidToName(event.feature.j.STATE), "id: "+event.feature.getId());
                 //if the same county is selected, hide data
                 this.selected = ((this.selectedID === event.feature.j.COUNTY) ? this.selected = false : this.selected = true);
                 //convert 2 digit code to state name using census data and assign rest of data for table
                 this.selectedState = this.gidToName(event.feature.j.STATE);
                 this.selectedID = event.feature.j.COUNTY;
                 this.selectedName = event.feature.j.NAME;
-                this.selectedPopulation = "Testing Population";
-                this.selectedAge = "Testing Age";
-                this.selectedGender = "Testing Gender";
-                this.selectedRace = "Testing Race";
+                this.selectedPopulation = this.countyData[2] || "Testing Population";
+                this.selectedAge = this.countyData[3] || "Testing Age";
+                this.selectedGender = this.countyData[4] || "Testing Gender";
+                this.selectedRace = this.countyData[5] || "Testing Race";
 
                 this.map.data.revertStyle();
                 if(this.selected === true) {
@@ -214,11 +217,11 @@
                         return 'Wyoming';
                 }
             },
-
+            //function for populating entire map
             getDemoData(filter){
                 this.censusMin = 0;
                 this.censusMax = 0;
-                axios.get("http://localhost:5000/"+filter).then(response => (this.demoData = response.data.demoData));
+                axios.get("http://localhost:5000/"+filter).then(response => (this.demoData = response.data.demoData)).catch("Error in Country Data Get Request");
                 this.demoData.forEach((row)=>{
                     const censusVar = parseFloat(row[2]);
                     const countyID = row[1];
@@ -230,10 +233,14 @@
                     if (censusVar > censusMax) {
                         this.censusMax = censusVar;
                     }
-
-                    map.data.getFeatureById(countyID).setProperty("CENSUSVAR", censusVar);
-                    this.styleFeature(map.data.getFeatureById(countyID));
+                    featureID = "0500000US"+toString(stateID)+toString(countyID)
+                    map.data.getFeatureById(featureID).setProperty("CENSUSVAR", censusVar);
+                    this.styleFeature(map.data.getFeatureById(featureID));
                 });
+            },
+
+            getCountyData(stateID, countyID){
+                axios.get("http://localhost:5000/"+stateID+"/"+countyID).then(response => (this.countyData = response.data.countyData)).catch("Error in County Data Get Request");
             },
 
             styleFeature(feature){
