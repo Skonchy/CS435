@@ -80,6 +80,9 @@
                 this.map.data.overrideStyle(feature, { strokeWeight: 1, fillOpacity: 0.1});
             });
 
+            //bring in map data
+            this.getDemoData();
+
             //geoJSON map area events
             this.map.data.addListener("click", (event)=>{
                 //TODO backend call to get county-specific data
@@ -221,11 +224,11 @@
             getDemoData(filter){
                 this.censusMin = 0;
                 this.censusMax = 0;
-                axios.get("http://localhost:5000/"+filter).then(response => (this.demoData = response.data.demoData)).catch("Error in Country Data Get Request");
+                axios.get("http://localhost:5000/").then(response => (this.demoData = response.data.demoData)).catch("Error in Country Data Get Request");
                 this.demoData.forEach((row)=>{
                     const censusVar = parseFloat(row[2]);
                     const countyID = row[1];
-                    const stateID = row[0]
+                    const stateID = row[0];
 
                     if (censusVar < censusMin) {
                         this.censusMin = censusVar;
@@ -235,7 +238,7 @@
                     }
                     featureID = "0500000US"+toString(stateID)+toString(countyID)
                     map.data.getFeatureById(featureID).setProperty("CENSUSVAR", censusVar);
-                    this.styleFeature(map.data.getFeatureById(featureID));
+                    //this.styleFeature(map.data.getFeatureById(featureID));
                 });
             },
 
