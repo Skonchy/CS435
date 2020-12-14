@@ -23,7 +23,7 @@
                 <td>County Name</td>
                 <td>Population</td>
                 <td>Average Age</td>
-                <td><button type="submit" @click="saveFile()">Export Data</button></td>
+                <td><button type="submit" @click="saveFileAll()">Export All</button></td>
             </tr>
             <tr>
                 <td>{{ selectedState }}</td>
@@ -31,7 +31,7 @@
                 <td>{{ selectedName }}</td>
                 <td>{{ selectedPopulation }}</td>
                 <td>{{ selectedAge }}</td>
-                <td><button type="submit" @click="saveFileAll()">Export All</button></td>
+                <td><button type="submit" @click="saveFile()">Export Data</button></td>
             </tr>
             </table>
         </div>
@@ -281,6 +281,7 @@
 
 
             saveFile(){
+                //Saves only data displayed by the table under the map
                 console.log("Attempting to save File")
                 const dataJSON = {
                     selectedState: this.selectedState,
@@ -301,6 +302,7 @@
             },
 
             saveFileAll(){
+                //Saves all data returned when changing the filter which is used to populate the map
                 console.log("Attempting to save File")
                 const data = JSON.stringify(this.demoData);
                 const blob = new Blob([data], {type: 'text/plain'});
